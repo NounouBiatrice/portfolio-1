@@ -1,79 +1,52 @@
-<?php include("common.php"); ?>
-<?= heading1(); ?>
-<!-- Jessica Wicksnin
-May 15, 2013
-Homework #6 Kevin Bacon 
-This page shows the results for the actor's common films with Kevin Bacon
-and allows the user to search again-->
-
-<div id="frame">
-	<?php top();
-	# connect to the database
-	$db = new PDO("mysql:dbname=imdb_small", "wicksnin", "Kgb2iSEmna4yW");
-	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-	$firstname = $_GET["firstname"];
-	$lastname = $_GET["lastname"];
-
-	# searches for the actor's id and name in the database
-	$rows = $db->query("SELECT id, first_name, last_name 
-		FROM actors 
-		WHERE first_name LIKE '$firstname%' AND last_name = '$lastname'
-		ORDER BY film_count DESC, id 
-		LIMIT 1;");
-	?>
-	<div id="main">
-		<?php if ($rows->rowCount() > 0) { 
-			foreach ($rows as $row) { 
-				$actor_id = $row["id"];
-			} 
-			# searches for common movies between the actor and Kevin Bacon
-			$rows2 = $db->query("SELECT DISTINCT m.name, m.year
-				FROM movies m
-				JOIN roles 1r ON 1r.movie_id = m.id
-				JOIN actors 1a ON 1a.id = 1r.actor_id
-				JOIN roles 2r ON 2r.movie_id = m.id
-				JOIN actors 2a ON 2r.actor_id = 2a.id
-				WHERE (1a.first_name = 'Kevin' AND 1a.last_name = 'Bacon' AND
-				2a.id = '$actor_id')
-				OR (1a.id = '$actor_id' AND 2a.first_name = 'Kevin' 
-				AND 2a.last_name = 'Bacon')
-				ORDER BY m.year DESC;");
-			
-			#displays common films if they exist
-			if ($rows2->rowCount() > 0) { ?>
-				<h2><?= $firstname ?> <?= $lastname ?>'s Movies with Kevin Bacon</h2>
-				<table>
-					<tr><th>#</th><th>Title</th><th>Year</th></tr>
-					<?php 
-					$count = 0;
-					foreach ($rows2 as $row) { 
-						$count++;
-						if ($count%2 == 0) { ?>
-							<tr class="row1">
-								<td> <?= $count ?> </td>
-								<td> <?= $row["name"] ?> </td>
-								<td> <?= $row["year"] ?>  </td>
-							</tr>
-						<?php } else { ?>
-							<tr class="row2">
-								<td> <?= $count ?> </td>
-								<td> <?= $row["name"] ?> </td>
-								<td> <?= $row["year"] ?>  </td>
-							</tr>
-						<?php } 
-					} ?>
-				</table>
-			<?php } else { ?>
-				<!-- Displays if the actor hasn't worked with Keving Bacon -->
-				<h2>Sorry!  <?= $firstname ?> <?= $lastname ?> hasn't had the privilege 
-				of working with K.B.  Yet.</h2>
-			<?php }
-		} else { ?> 
-			<!-- Displays if the person is not an actor in the database -->
-			<h2>Sorry! <?= $firstname ?> <?= $lastname ?> is not real.</h2>
-		<?php } 
-		searchForms(); ?>
-	</div>
-	<?= bottom(); ?>
-</div>
+<?php
+    /*Jessica Wicksnin
+    To Do List
+    This page can delete or add items to a user's to do list.  This page
+    redirects to the todo list OR to the start page if the page is
+    accessed illegally.*/
+    
+    include("common.php"); 
+    session_start();
+    if (isset($_SESSION["username"])) {
+        $username = $_SESSION["username"];
+        $password = $_SESSION["password"];
+        # adds an item if they pressed "add"
+        if (isset($_POST["action"])) {
+            $action = $_POST["action"];
+            if ($action == "add") {
+                $newitem = $_POST["item"];
+                if (isset($_COOKIE["deleted"])) {
+                    $deleted = $_COOKIE["deleted"];
+                    if ($deleted == "yes") {
+                        file_put_contents("todo_$username.txt", "\n" . $newitem . "\n", FILE_APPEND);
+                    } else {
+                        file_put_contents("todo_$username.txt", $newitem . "\n", FILE_APPEND);
+                    }
+                } else {
+                    file_put_contents("todo_$username.txt", $newitem . "\n", FILE_APPEND);
+                }
+                setcookie("deleted", "no");
+                header("Location: todolist.php");
+                die();
+            #delets an item if the user pressed "delete"
+            } else if ($action == "delete") {
+                $index = $_POST["index"];
+                $lines = file("todo_$username.txt", FILE_IGNORE_NEW_LINES);
+                unset($lines[$index]);
+                if (count($lines) > 0) {
+                    $newtext = implode($lines, "\n");
+                    setcookie("deleted", "yes");
+                } else {
+                    $newtext = implode($lines);
+                    setcookie("deleted", "no");
+                }
+                file_put_contents("todo_$username.txt", $newtext);
+                header("Location: todolist.php");
+                die();
+             } 
+        }
+    #redirects the user back to start if they aren't logged in
+    } else {
+        back_to_start();
+    }
+?>
