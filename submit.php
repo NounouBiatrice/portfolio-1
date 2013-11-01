@@ -1,7 +1,6 @@
 <?php include("common.php"); ?>
 <?= heading1(); ?>
 <!-- Jessica Wicksnin
-CSE154 Section AH
 May 15, 2013
 Homework #6 Kevin Bacon 
 This page shows the results for the actor's common films with Kevin Bacon
