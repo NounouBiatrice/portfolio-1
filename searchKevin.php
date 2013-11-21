@@ -10,7 +10,7 @@ and allows the user to search again-->
 <div id="frame">
 	<?php top();
 	# connect to the database
-	$db = new PDO("mysql:dbname=imdb_small", "wicksnin", "Kgb2iSEmna4yW");
+	$db = new PDO("mysql:dbname=imdb_small", "wicksnin", "password");
 	$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 	$firstname = $_GET["firstname"];
